@@ -144,6 +144,7 @@ def findtargets (mrna,refpath,ie,outfiles,plp_length=30,gc_min=50,gc_max=65,liga
     import Bio
     from Bio import SeqIO
     from Bio.SeqUtils import GC
+    from Bio.SeqUtils import MeltingTemp
     from Bio.Seq import Seq
     from Bio.SeqRecord import SeqRecord
     from Bio.Align import MultipleSeqAlignment
@@ -152,7 +153,7 @@ def findtargets (mrna,refpath,ie,outfiles,plp_length=30,gc_min=50,gc_max=65,liga
     from Bio import AlignIO
     import random
     import numpy as np
-    targets = pd.DataFrame(columns=['Gene', 'Position', 'Sequence'])
+    targets = pd.DataFrame(columns=['Gene', 'Position', 'Sequence', 'Tm'])
     end = len(mrna)-(plp_length-1)
     #print (end)
     for i in range(0, end):
@@ -165,7 +166,8 @@ def findtargets (mrna,refpath,ie,outfiles,plp_length=30,gc_min=50,gc_max=65,liga
         if central_condition:
             if GC(mrna.seq[i:i+plp_length]) > gc_min and GC(mrna.seq[i:i+plp_length]) < gc_max:
                 if mrna.seq[i:i+plp_length].count("AAA")==0 and mrna.seq[i:i+plp_length].count("TTT")==0 and mrna.seq[i:i+plp_length].count("GGG")==0 and mrna.seq[i:i+plp_length].count("CCC")==0:
-                    targets = targets.append({'Gene': mrna.id, 'Position': i, 'Sequence':mrna.seq[i:i+plp_length]}, ignore_index=True)
+                    Tm_val = Bio.SeqUtils.MeltingTemp.Tm_GC(mrna.seq[i:i+plp_length])
+                    targets = targets.append({'Gene': mrna.id, 'Position': i, 'Sequence':mrna.seq[i:i+plp_length], 'Tm': Tm_val}, ignore_index=True)
                     pato = refpath + '/target_regions_' + mrna.id + '_' + str(ie) + '.csv'
                     outfiles.append(pato)
                     targets.to_csv(pato)
